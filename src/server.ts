@@ -3,6 +3,7 @@ import './nodeHttpClient';
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
 import { createApp } from './app';
+import { openAccountStoreFromEnv } from './storage/upstashAccounts';
 
 const WelcomePage = require('../core/WelcomePage');
 
@@ -14,7 +15,9 @@ async function start() {
 
     const preferredPort = Number(process.env.PORT || 3000);
     const host = process.env.HOST || '';
-    const app = await createApp();
+    // 配置了 Upstash Redis 时，账号数据改存 Redis，实例重建后不丢。
+    const accountStore = await openAccountStoreFromEnv();
+    const app = await createApp(accountStore ? { accountStore } : {});
     const { server: httpServer, port } = await listenWithOptionalFallback(
       app,
       preferredPort,
